@@ -15,6 +15,16 @@ cp -avf "/ctx/system_files"/. /
 # this installs a package from fedora repos
 dnf5 install -y tmux
 
+# Remove the dinosaurs image from Bluefin
+# Extinction Mod from https://github.com/ublue-os/bluefin/discussions/3344
+dnf5 -y reinstall plymouth generic-logos
+dnf5 -y swap generic-logos fedora-logos
+sed -i '/picture-uri/ s/^/#/' /usr/share/glib-2.0/schemas/zz0-bluefin-modifications.gschema.override
+glib-compile-schemas /usr/share/glib-2.0/schemas
+QUALIFIED_KERNEL="$(rpm -qa | grep -P '^kernel-\d+\.\d+\.\d+' | sed -E 's/^kernel-//')"
+/usr/bin/dracut --no-hostonly --kver "$QUALIFIED_KERNEL" --reproducible -v --add ostree -f "/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
+chmod 0600 "/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
+
 # Use a COPR Example:
 #
 # dnf5 -y copr enable ublue-os/staging
